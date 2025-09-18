@@ -26,7 +26,7 @@ jobs:
       - name: Create production environment file
         working-directory: ./frontend
         run: |
-          echo "NEXT_PUBLIC_API_URL=https://expandev-app-04.azurewebsites.net/api/v1" > .env.production
+          echo "NEXT_PUBLIC_API_URL=https://expandev-app-03.azurewebsites.net/api/v1" > .env.production
           cat .env.production
 
       - name: Update next.config.mjs with backend URL
@@ -40,12 +40,12 @@ jobs:
               return [
                 {
                   source: '/api/:path*',
-                  destination: 'https://expandev-app-04.azurewebsites.net/api/:path*',
+                  destination: 'https://expandev-app-03.azurewebsites.net/api/:path*',
                 },
               ];
             },
           };
-          
+
           export default nextConfig;
           EOF
 
@@ -53,16 +53,16 @@ jobs:
         working-directory: ./frontend
         run: |
           npm install
-          NEXT_PUBLIC_API_URL=https://expandev-app-04.azurewebsites.net/api/v1 npm run build
-          
+          NEXT_PUBLIC_API_URL=https://expandev-app-03.azurewebsites.net/api/v1 npm run build
+
           # Verificar se standalone foi criado
           echo "Checking .next directory:"
           ls -la .next/
-          
+
           # Copiar arquivos estáticos necessários
           cp -R ./public ./.next/standalone/public
           cp -R ./.next/static ./.next/standalone/.next/static
-          
+
           echo "Standalone directory contents:"
           ls -la .next/standalone/
 
@@ -87,7 +87,7 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    
+
     permissions:
       id-token: write
 
@@ -98,33 +98,24 @@ jobs:
           name: nextjs-app
 
       - name: Unzip artifact for deployment
-        run: |
-          echo "Files before unzip:"
-          ls -la
-          unzip release.zip
-          echo "Unzipped contents:"
-          ls -la
-          echo "Checking for package.json:"
-          if [ -f "package.json" ]; then
-            echo "package.json found!"
-            head -5 package.json
-          else
-            echo "ERROR: package.json not found!"
-          fi
-      
+        run: unzip release.zip
+
       - name: Login to Azure
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Wait for Azure to be ready
+        run: sleep 30
+
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'expandev-app-06'
+          app-name: 'expandev-app-04'
           package: .
           startup-command: 'node server.js'
         env:
-          SCM_DO_BUILD_DURING_DEPLOYMENT: 'false'
-          WEBSITE_RUN_FROM_PACKAGE: '0'
-          ENABLE_ORYX_BUILD: 'false'
+          SCM_DO_BUILD_DURING_DEPLOYMENT: false
+          WEBSITE_RUN_FROM_PACKAGE: 0
+          ENABLE_ORYX_BUILD: false
