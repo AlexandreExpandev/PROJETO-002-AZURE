@@ -1,4 +1,4 @@
-name: Deploy Backend to Azure Web App
+name: Deploy Node.js Backend to Azure Web App
 
 on:
   workflow_dispatch:
@@ -55,7 +55,7 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    
+
     permissions:
       id-token: write
 
@@ -67,11 +67,7 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: |
-          echo "Files before unzip:"
-          ls -la
           unzip release.zip
-          echo "Unzipped contents:"
-          ls -la
           echo "Checking for package.json:"
           if [ -f "package.json" ]; then
             echo "package.json found!"
@@ -79,7 +75,7 @@ jobs:
           else
             echo "ERROR: package.json not found!"
           fi
-      
+
       - name: Login to Azure
         uses: azure/login@v1
         with:
@@ -89,6 +85,6 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'expandev-app-04'
+          app-name: 'expandev-app-03'
           package: .
           startup-command: 'npm start'
